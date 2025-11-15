@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SLOT: TITLE -->
+    <title>Prepe - ABO & Rh Grouping (DMLT 1st Year)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Required libraries for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #dbe7ff 100%);
+        }
+        .scroll-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            gap: 2.5rem; /* 40px */
+            padding: 2.5rem 0;
+            width: 100%;
+            min-height: 100vh;
+            scrollbar-width: none;
+        }
+        .scroll-container::-webkit-scrollbar { display: none; }
+        .slide {
+            flex-shrink: 0;
+            width: 95%; 
+            max-width: 1080px;
+            height: auto;
+            background-color: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            color: #1a202c;
+            position: relative;
+            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.15);
+            border-radius: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            overflow: hidden;
+            padding: 1.5rem; /* 24px */
+            display: flex;
+            flex-direction: column;
+            background-image: url('data:image/svg+xml;utf8,<svg width="350" height="200" xmlns="http://www.w3.org/2000/svg"><text x="50%" y="50%" font-size="50" font-weight="bold" font-family="Poppins, sans-serif" fill="rgba(0,0,0,0.04)" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30 175 100)">Prepe</text></svg>');
+        }
+        @media (min-width: 640px) {
+            .slide {
+                padding: 2.8125rem; /* 45px */
+            }
+        }
+        .brand-logo {
+            position: absolute;
+            top: 1.5rem; /* 24px */
+            left: 1.5rem; /* 24px */
+            font-size: 2rem; /* 32px */
+            font-weight: 700;
+            color: #f97316;
+            z-index: 1;
+        }
+        @media (min-width: 640px) {
+           .brand-logo {
+                top: 2.8125rem; /* 45px */
+                left: 2.8125rem; /* 45px */
+                font-size: 2.125rem; /* 34px */
+           }
+        }
+        #download-pdf-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-image: linear-gradient(to right, #1d4ed8 0%, #3b82f6 51%, #1d4ed8 100%);
+            background-size: 200% auto;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease-in-out;
+            z-index: 100;
+            border: none;
+        }
+        @media (min-width: 640px) {
+            #download-pdf-btn {
+                bottom: 30px;
+                right: 30px;
+                padding: 15px 30px;
+                font-size: 1.125rem;
+            }
+        }
+        #download-pdf-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 28px rgba(59, 130, 246, 0.5);
+            background-position: right center;
+        }
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: none; justify-content: center;
+            align-items: center; z-index: 1000; color: white; font-size: 24px;
+            font-weight: 600; backdrop-filter: blur(5px);
+        }
+        .slide-title {
+            font-size: 2rem; /* 32px */
+            font-weight: 700; text-align: center; margin-top: 4rem;
+            margin-bottom: 2rem; color: #1a202c; letter-spacing: -1.5px;
+            position: relative; z-index: 1;
+        }
+        @media (min-width: 640px) {
+            .slide-title {
+                font-size: 2.875rem; /* 46px */
+                margin-top: 3.75rem; /* 60px */
+                margin-bottom: 1.875rem; /* 30px */
+            }
+        }
+        .card {
+             background-color: rgba(255, 255, 255, 0.85);
+             border-radius: 22px; padding: 1.25rem;
+             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+             border: 1px solid rgba(255, 255, 255, 0.5);
+             display: flex; flex-direction: column;
+             transition: all 0.3s ease-in-out;
+             position: relative; z-index: 1;
+        }
+        .card:not(.mind-map-card):hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .card-title {
+             font-size: 1.125rem; /* 18px */
+             font-weight: 700; margin-bottom: 0.75rem;
+             padding-bottom: 0.625rem; border-bottom: 1px solid rgba(0,0,0,0.07);
+             display: flex; align-items: center;
+        }
+        @media (min-width: 640px) {
+            .card-title { font-size: 1.25rem; /* 20px */ }
+        }
+        .card-title .icon {
+            margin-right: 0.75rem; font-size: 1.25rem; width: 36px; height: 36px;
+            display: grid; place-items: center; border-radius: 50%;
+            background-color: var(--icon-bg, #fef2e5); color: var(--icon-color, #f97316);
+        }
+        .card-content {
+            font-size: 0.9375rem; /* 15px */
+            line-height: 1.75; flex-grow: 1;
+        }
+        /* Custom table styles */
+        .op-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .op-table th, .op-table td {
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.875rem; /* 14px */
+        }
+        .op-table th {
+            background-color: rgba(251, 146, 60, 0.1);
+            font-weight: 600;
+        }
+        .op-table td {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        @media (max-width: 640px) {
+            .op-table th, .op-table td {
+                padding: 0.5rem;
+                font-size: 0.8rem; /* 13px */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay">
+        <span><i class="fa-solid fa-spinner fa-spin mr-3"></i>Generating PDF...</span>
+    </div>
+
+    <div class="scroll-container">
+        <!-- Slide 1: Snapshot & Key Concepts -->
+        <div id="slide1" class="slide">
+            <div class="brand-logo">Prepe</div>
+            <!-- SLOT: SLIDE 1 TITLE -->
+            <h1 class="slide-title">🩸 ABO & Rh Grouping: One Page Note</h1>
+            <!-- Desktop Mindmap Layout -->
+            <div class="hidden md:flex flex-grow items-center justify-center">
+                <div class="w-full h-full relative flex items-center justify-center" style="min-height: 700px;">
+                    <svg class="absolute top-0 left-0 w-full h-full z-10" viewbox="0 0 990 990">
+                        <defs><linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#fdbf72;stop-opacity:1" /><stop offset="100%" style="stop-color:#f97316;stop-opacity:1" /></linearGradient></defs>
+                        <line x1="495" y1="495" x2="215" y2="280" stroke="url(#lineGrad)" stroke-width="2.5" /><line x1="495" y1="495" x2="775" y2="280" stroke="url(#lineGrad)" stroke-width="2.5" /><line x1="495" y1="495" x2="111" y2="495" stroke="url(#lineGrad)" stroke-width="2.5" /><line x1="495" y1="495" x2="879" y2="495" stroke="url(#lineGrad)" stroke-width="2.5" /><line x1="495" y1="495" x2="215" y2="710" stroke="url(#lineGrad)" stroke-width="2.5" /><line x1="495" y1="495" x2="775" y2="710" stroke="url(#lineGrad)" stroke-width="2.5" />
+                    </svg>
+                    <!-- SLOT: SLIDE 1 CENTER -->
+                    <div class="absolute w-72 h-72 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex flex-col items-center justify-center text-white shadow-2xl z-20"><h2 class="text-4xl font-bold">Blood Grouping</h2><p class="text-2xl font-semibold">(रक्त समूह)</p></div>
+                    <!-- SLOT: SLIDE 1 CARDS -->
+                    <div class="card mind-map-card absolute w-64 text-center transform -translate-x-[22rem] -translate-y-52 z-30"><h3 class="card-title justify-center text-base" style="--icon-color: #c2410c; --icon-bg: #fff7ed;"><i class="fa-solid fa-a icon"></i> ABO System</h3><ul class="text-xs list-disc list-inside text-left"><li>Antigens (एंटीजन): A, B</li><li>Antibodies (एंटीबॉडी): Anti-A, Anti-B</li><li>Landsteiner's Law (लैंडस्टीनर का नियम)</li><li>Groups: A, B, AB, O</li></ul></div>
+                    <div class="card mind-map-card absolute w-64 text-center transform translate-x-[22rem] -translate-y-52 z-30"><h3 class="card-title justify-center text-base" style="--icon-color: #4b5563; --icon-bg: #f3f4f6;"><i class="fa-solid fa-plus-minus icon"></i> Rh System</h3><ul class="text-xs list-disc list-inside text-left"><li>Antigen (एंटीजन): D (सबसे महत्वपूर्ण)</li><li>Antibodies (एंटीबॉडी): Anti-D (Immune)</li><li>Rh Positive (D-positive)</li><li>Rh Negative (D-negative)</li></ul></div>
+                    <div class="card mind-map-card absolute w-64 text-center transform -translate-x-96 z-30"><h3 class="card-title justify-center text-base" style="--icon-color: #2563eb; --icon-bg: #eff6ff;"><i class="fa-solid fa-forward icon"></i> Forward Grouping</h3><ul class="text-xs list-disc list-inside text-left"><li>Tests: Patient's RBCs (रोगी के RBCs)</li><li>Reagent: Known Antisera (ज्ञात एंटीसिरा)</li><li>Detects: Antigens (एंटीजन)</li><li>Also called: Cell Grouping</li></ul></div>
+                    <div class="card mind-map-card absolute w-64 text-center transform translate-x-96 z-30"><h3 class="card-title justify-center text-base" style="--icon-color: #16a34a; --icon-bg: #f0fdf4;"><i class="fa-solid fa-backward icon"></i> Reverse Grouping</h3><ul class="text-xs list-disc list-inside text-left"><li>Tests: Patient's Serum (रोगी का सीरम)</li><li>Reagent: Known RBCs (ज्ञात RBCs)</li><li>Detects: Antibodies (एंटीबॉडी)</li><li>Also called: Serum Grouping</li></ul></div>
+                    <div class="card mind-map-card absolute w-64 text-center transform -translate-x-[22rem] translate-y-52 z-30"><h3 class="card-title justify-center text-base" style="--icon-color: #7e22ce; --icon-bg: #f5f3ff;"><i class="fa-solid fa-atom icon"></i> Principles (सिद्धांत)</h3><ul class="text-xs list-disc list-inside text-left"><li>Agglutination (गुच्छन)</li><li>Antigen-Antibody Reaction</li><li>Hemagglutination</li><li>Visible Clumping (थक्का दिखना)</li></ul></div>
+                    <div class="card mind-map-card absolute w-64 text-center transform translate-x-[22rem] translate-y-52 z-30"><h3 class="card-title justify-center text-base" style="--icon-color: #ca8a04; --icon-bg: #fefce8;"><i class="fa-solid fa-heart-pulse icon"></i> Clinical Importance</h3><ul class="text-xs list-disc list-inside text-left"><li>Blood Transfusion (रक्ताधान)</li><li>HDFN (Hemolytic Disease)</li><li>Organ Transplant (अंग प्रत्यारोपण)</li><li>Medico-legal cases</li></ul></div>
+                </div>
+            </div>
+             <!-- Mobile Vertical Layout -->
+            <div class="md:hidden flex flex-col items-center gap-4">
+                <!-- SLOT: SLIDE 1 CENTER (MOBILE) -->
+                <div class="w-60 h-60 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex flex-col items-center justify-center text-white shadow-2xl mb-4"><h2 class="text-3xl font-bold">Blood Grouping</h2><p class="text-xl font-semibold">(रक्त समूह)</p></div>
+                <!-- SLOT: SLIDE 1 CARDS (MOBILE) -->
+                <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="card"><h3 class="card-title" style="--icon-color: #c2410c; --icon-bg: #fff7ed;"><i class="fa-solid fa-a icon"></i> ABO System</h3><ul class="text-sm list-disc list-inside text-left"><li>Antigens (एंटीजन): A, B</li><li>Antibodies (एंटीबॉडी): Anti-A, Anti-B</li></ul></div>
+                    <div class="card"><h3 class="card-title" style="--icon-color: #4b5563; --icon-bg: #f3f4f6;"><i class="fa-solid fa-plus-minus icon"></i> Rh System</h3><ul class="text-sm list-disc list-inside text-left"><li>Antigen (एंटीजन): D (सबसे महत्वपूर्ण)</li><li>Rh Positive / Rh Negative</li></ul></div>
+                    <div class="card"><h3 class="card-title" style="--icon-color: #2563eb; --icon-bg: #eff6ff;"><i class="fa-solid fa-forward icon"></i> Forward Grouping</h3><ul class="text-sm list-disc list-inside text-left"><li>Detects: Antigens (एंटीजन)</li><li>Sample: Patient's RBCs</li></ul></div>
+                    <div class="card"><h3 class="card-title" style="--icon-color: #16a34a; --icon-bg: #f0fdf4;"><i class="fa-solid fa-backward icon"></i> Reverse Grouping</h3><ul class="text-sm list-disc list-inside text-left"><li>Detects: Antibodies (एंटीबॉडी)</li><li>Sample: Patient's Serum</li></ul></div>
+                    <div class="card"><h3 class="card-title" style="--icon-color: #7e22ce; --icon-bg: #f5f3ff;"><i class="fa-solid fa-atom icon"></i> Principles (सिद्धांत)</h3><ul class="text-sm list-disc list-inside text-left"><li>Agglutination (गुच्छन)</li><li>Antigen-Antibody Reaction</li></ul></div>
+                    <div class="card"><h3 class="card-title" style="--icon-color: #ca8a04; --icon-bg: #fefce8;"><i class="fa-solid fa-heart-pulse icon"></i> Clinical Importance</h3><ul class="text-sm list-disc list-inside text-left"><li>Blood Transfusion (रक्ताधान)</li><li>HDFN (Hemolytic Disease)</li></ul></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Comparative Analysis -->
+        <div id="slide2" class="slide">
+            <div class="brand-logo">Prepe</div>
+            <!-- SLOT: SLIDE 2 TITLE -->
+            <h1 class="slide-title">📊 Comparative Analysis</h1>
+            <div class="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- SLOT: SLIDE 2 MAIN CONTENT (TABLE) -->
+                <div class="card lg:col-span-3 p-4 md:p-6">
+                    <h3 class="card-title text-gray-700 m-0 pb-4 text-center md:text-left" style="border:none;"><i class="fa-solid fa-ruler-horizontal icon"></i> Forward Grouping vs. Reverse Grouping</h3>
+                    <div class="w-full flex-grow text-sm flex flex-col justify-center overflow-x-auto">
+                        <!-- Semantic Table -->
+                        <table class="op-table">
+                            <thead>
+                                <tr>
+                                    <th>Criterion (मानदंड)</th>
+                                    <th>Forward Grouping (Cell Grouping)</th>
+                                    <th>Reverse Grouping (Serum Grouping)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Purpose (उद्देश्य)</strong></td>
+                                    <td>Detects Antigens on RBCs (RBCs पर एंटीजन का पता लगाना)</td>
+                                    <td>Detects Antibodies in Serum (सीरम में एंटीबॉडी का पता लगाना)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sample Used (नमूना)</strong></td>
+                                    <td>Patient's RBCs (रोगी के RBCs)</td>
+                                    <td>Patient's Serum/Plasma (रोगी का सीरम/प्लाज्मा)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Reagent Used (अभिकर्मक)</strong></td>
+                                    <td>Known Antisera (Anti-A, Anti-B, Anti-D)</td>
+                                    <td>Known pooled RBCs (A cells, B cells)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Also Known As (अन्य नाम)</strong></td>
+                                    <td>Cell Grouping (सेल ग्रुपिंग)</td>
+                                    <td>Serum Grouping (सीरम ग्रुपING) / Back Typing</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Confirms (पुष्टि)</strong></td>
+                                    <td>Patient's Blood Group (RBCs)</td>
+                                    <td>Landsteiner's Law (एंटीबॉडी)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Errors (त्रुटियाँ)</strong></td>
+                                    <td>Weak antigens, Rouleaux</td>
+                                    <td>Low antibody titer, Cold agglutinins</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- SLOT: SLIDE 2 SIDE CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:col-span-3 gap-6">
+                    <div class="card sm:col-span-2 lg:col-span-1"><h3 class="card-title" style="--icon-color: #1e40af; --icon-bg: #dbeafe;"><i class="fa-solid fa-droplet icon"></i> ABO Antibodies</h3><ul class="card-content text-sm space-y-3 pl-2"><li><strong>Type:</strong> Naturally Occurring (प्राकृतिक)</li><li><strong>Class:</strong> Mostly IgM</li><li><strong>Reaction:</strong> Room Temp (Saline)</li><li><strong>Present:</strong> After 3-6 months of birth</li></ul></div>
+                    <div class="card sm:col-span-2 lg:col-span-1"><h3 class="card-title" style="--icon-color: #166534; --icon-bg: #dcfce7;"><i class="fa-solid fa-shield-virus icon"></i> Rh Antibodies</h3><ul class="card-content text-sm space-y-3 pl-2"><li><strong>Type:</strong> Immune (प्रतिरक्षा)</li><li><strong>Class:</strong> Mostly IgG</li><li><strong>Reaction:</strong> 37°C (IAT/AHG)</li><li><strong>Present:</strong> After exposure (transfusion/pregnancy)</li></ul></div>
+                    <div class="card sm:col-span-2 lg:col-span-1"><h3 class="card-title" style="--icon-color: #0ea5e9; --icon-bg: #e0f2fe;"><i class="fa-solid fa-gavel icon"></i> Landsteiner's Law</h3><div class="card-content space-y-3 text-xs pt-2"><div><h4 class="font-bold text-blue-700">Rule 1</h4><p class="mt-1">If antigen is present, corresponding antibody is absent.</p></div><div><h4 class="font-bold text-blue-700">Rule 2</h4><p class="mt-1">If antigen is absent, corresponding antibody is present.</p></div><div><h4 class="font-bold text-red-700">Applies to:</h4><p class="mt-1">ABO system only. (Rh का नहीं)</p></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Process / Workflow -->
+        <div id="slide3" class="slide">
+            <div class="brand-logo">Prepe</div>
+            <!-- SLOT: SLIDE 3 TITLE -->
+            <h1 class="slide-title">🧪 Process: Tube Method (ट्यूब विधि)</h1>
+            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- SLOT: SLIDE 3 MAIN CONTENT (STEPS) -->
+                <div class="card md:row-span-2"><h3 class="card-title" style="--icon-color: #2563eb; --icon-bg: #dbeafe;"><i class="fa-solid fa-list-ol icon"></i> ABO & Rh Grouping Steps</h3><div class="card-content flex flex-col justify-around text-sm gap-4"><div class="border-b-2 border-dashed border-gray-200 pb-3"><h4 class="font-bold text-lg text-blue-800 flex items-center"><i class="fa-solid fa-flask text-2xl w-8 mr-2"></i> 1. Preparation (तैयारी)</h4><ul class="mt-2 list-disc list-inside text-left px-2 md:px-4 space-y-1"><li>Label 5 tubes (A, B, D, A-cell, B-cell).</li><li>Prepare 5% RBC suspension (Saline में).</li></ul></div><div class="py-3 border-b-2 border-dashed border-gray-200"><h4 class="font-bold text-lg text-green-800 flex items-center"><i class="fa-solid fa-eye-dropper text-2xl w-8 mr-2"></i> 2. Reagent Adding</h4><ul class="mt-2 list-disc list-inside text-left px-2 md:px-4 space-y-1"><li><strong>Forward (A, B, D):</strong> 1 drop Antisera + 1 drop 5% RBCs.</li><li><strong>Reverse (A-cell, B-cell):</strong> 2 drops Serum + 1 drop 5% known cells.</li></ul></div><div class="pt-3"><h4 class="font-bold text-lg text-yellow-800 flex items-center"><i class="fa-solid fa-magnifying-glass text-2xl w-8 mr-2"></i> 3. Observation (अवलोकन)</h4><ul class="mt-2 list-disc list-inside text-left px-2 md:px-4 space-y-1"><li><strong>Centrifugation (अपकेंद्रण):</strong> Spin (1500 rpm, 1 min).</li><li><strong>Observation:</strong> Gently resuspend cell button.</li><li><strong>Check:</strong> Look for Agglutination (गुच्छन).</li><li><strong>Rh Neg Confirmation:</strong> Incubate at 37°C, wash, add AHG (IAT).</li></ul></div></div></div>
+                <!-- SLOT: SLIDE 3 SIDE CARDS -->
+                <div class="card"><h3 class="card-title" style="--icon-color: #ea580c; --icon-bg: #fff7ed;"><i class="fa-solid fa-person-digging icon"></i> Common Pitfalls (गलतियाँ)</h3><ul class="card-content text-sm space-y-2 pl-2"><li><i class="fa-solid fa-check text-orange-500 w-5"></i> <strong>Clerical Error:</strong> Wrong sample/labeling. (Fix: Double-check ID)</li><li><i class="fa-solid fa-check text-orange-500 w-5"></i> <strong>Contamination:</strong> Dirty glassware. (Fix: Use clean tubes)</li><li><i class="fa-solid fa-check text-orange-500 w-5"></i> <strong>Reagent Error:</strong> Expired reagents. (Fix: Run daily QC)</li><li><i class="fa-solid fa-check text-orange-500 w-5"></i> <strong>Centrifugation:</strong> Over/under-spinning. (Fix: Calibrate)</li></ul></div>
+                <div class="card"><h3 class="card-title" style="--icon-color: #16a34a; --icon-bg: #f0fdf4;"><i class="fa-solid fa-tasks icon"></i> Interpreting Results (व्याख्या)</h3><ul class="card-content text-sm space-y-2 pl-2"><li><i class="fa-solid fa-check text-green-500 w-5"></i> <strong>Agglutination:</strong> Positive (+) reaction</li><li><i class="fa-solid fa-times text-red-500 w-5"></i> <strong>No Agglutination:</strong> Negative (0) reaction</li><li><i class="fa-solid fa-check text-green-500 w-5"></i> <strong>Hemolysis (RBCs burst):</strong> Positive (+) reaction</li><li><i class="fa-solid fa-exclamation-triangle text-yellow-500 w-5"></i> <strong>Rouleaux:</strong> False positive (Fix: Saline wash)</li></ul></div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Mega Matrix -->
+        <div id="slide4" class="slide">
+            <div class="brand-logo">Prepe</div>
+            <!-- SLOT: SLIDE 4 TITLE -->
+            <h1 class="slide-title">⚡ Final Revision: Mega Matrix</h1>
+            <div class="flex-grow w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <!-- SLOT: SLIDE 4 CARDS -->
+                <div class="card"><h3 class="card-title"><i class="fa-solid fa-book-atlas icon"></i> Core Definitions</h3><ul class="card-content text-sm list-disc list-inside space-y-2.5 pl-2"><li><strong>Antigen (एंटीजन):</strong> Substance on RBC surface (e.g., A, B, D).</li><li><strong>Antibody (एंटीबॉडी):</strong> Protein in serum (e.g., Anti-A).</li><li><strong>Agglutination:</strong> Clumping of RBCs.</li><li><strong>Antisera (एंटीसिरा):</strong> Readymade antibodies for testing.</li></ul></div>
+                <div class="card"><h3 class="card-title" style="--icon-color: #1d4ed8; --icon-bg: #e0e7ff;"><i class="fa-solid fa-star-of-life icon"></i> Key Rules</h3><ul class="card-content text-sm list-disc list-inside space-y-2.5 pl-2"><li>Forward + Reverse grouping must match.</li><li>Rh Control tube must be negative.</li><li><strong>Universal Donor:</strong> O Negative (O-)</li><li><strong>Universal Recipient:</strong> AB Positive (AB+)</li></ul></div>
+                <div class="card"><h3 class="card-title" style="--icon-color: #15803d; --icon-bg: #d1fae5;"><i class="fa-solid fa-biohazard icon"></i> Mistake Bank (Error Traps)</h3><ul class="card-content text-sm list-disc list-inside space-y-2.5 pl-2"><li><strong>Weak D:</strong> May type as Rh-neg in saline. Needs IAT.</li><li><strong>Bombay Group:</strong> No A/B/H antigen. Shows 'O' but has Anti-H.</li><li><strong>Cold Agglutinins:</strong> False positive in reverse. (Fix: Warm sample)</li></ul></div>
+                <div class="card"><h3 class="card-title" style="--icon-color: #be123c; --icon-bg: #ffe4e6;"><i class="fa-solid fa-question-circle icon"></i> MCQs (सैंपल प्रश्न)</h3><ul class="card-content text-sm list-disc list-inside space-y-2.5 pl-2"><li><strong>Q1:</strong> Landsteiner's law applies to...
+                    (A) Rh system (B) <strong>ABO system</strong> (C) Both
+                    <br><em>(Rationale: Specific to ABO natural antibodies.)</em></li>
+                <li><strong>Q2:</strong> Reverse grouping detects...
+                    (A) Antigens (B) <strong>Antibodies</strong> (C) Enzymes
+                    <br><em>(Rationale: Uses patient serum to find antibodies.)</em></li></ul></div>
+                <div class="card"><h3 class="card-title" style="--icon-color: #701a75; --icon-bg: #f3e8ff;"><i class="fa-solid fa-comments icon"></i> 3-Line FAQ (Viva Qs)</h3><ul class="card-content text-sm list-disc list-inside space-y-2.5 pl-2"><li><strong>Q: What is a 5% RBC suspension?</strong>
+                    <br>A: A standard dilution of RBCs in saline for tube testing. Ensures optimal antigen-antibody ratio.</li>
+                <li><strong>Q: Why no reverse group for Rh?</strong>
+                    <br>A: Rh antibodies (Anti-D) are 'immune' (not natural), so they aren't normally present in Rh-negative people.</li></ul></div>
+                <div class="card"><h3 class="card-title" style="--icon-color: #b45309; --icon-bg: #fef3c7;"><i class="fa-solid fa-clipboard-check icon"></i> Recap Checklist</h3><ul class="card-content text-sm list-disc list-inside space-y-2.5 pl-2"><li>Revise Landsteiner's Law.</li><li>Forward vs. Reverse principle.</li><li>ABO (IgM) vs. Rh (IgG) antibodies.</li><li>Steps for Tube Method (5 tubes).</li><li>Meaning of Agglutination & Hemolysis.</li><li>Universal Donor & Recipient.</li></ul></div>
+            </div>
+        </div>
+
+        <!-- Follow Up Section -->
+        <div class="slide">
+             <div class="flex flex-col h-full justify-center items-center text-center p-6 md:p-12 bg-gradient-to-br from-gray-50 to-blue-100">
+                <p class="text-xl md:text-2xl font-semibold text-blue-600 mb-2 md:mb-4">Welcome to Prepe</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-3 md:mb-5"> अपनी तैयारी को नई उड़ान दें!</h2>
+                <p class="text-base md:text-lg text-gray-600 mb-8 md:mb-12">हमारे अन्य बेहतरीन कोर्सेस भी देखें।</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12 w-full max-w-4xl">
+                    <a href="https://offer.prepeai.in" target="_blank" class="block bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 ease-in-out">
+                        <i class="fa-solid fa-tags text-4xl text-green-500 mb-3"></i>
+                        <h3 class="font-bold text-lg text-green-800">FLAT 50% OFF</h3>
+                        <p class="text-sm text-gray-500 mt-1">Limited Time Offer</p>
+                    </a>
+                    <a href="https://shop.prepeai.in" target="_blank" class="block bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 ease-in-out">
+                        <i class="fa-solid fa-layer-group text-4xl text-teal-500 mb-3"></i>
+                        <h3 class="font-bold text-lg text-teal-800">Explore More Courses</h3>
+                        <p class="text-sm text-gray-500 mt-1">Expand Your Knowledge</p>
+                    </a>
+                    <a href="https://instagram.com/prepe.ai" target="_blank" class="block bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 ease-in-out">
+                        <i class="fab fa-instagram text-4xl text-pink-500 mb-3"></i>
+                        <h3 class="font-bold text-lg text-pink-800">Follow on Instagram</h3>
+                        <p class="text-sm text-gray-500 mt-1">@prepe.ai</p>
+                    </a>
+                </div>
+                <div class="border-t-2 border-dashed border-gray-300 pt-8 md:pt-10 w-full max-w-4xl">
+                    <a href="https://www.prepeai.in" target="_blank" class="inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-lg md:text-xl py-3 px-8 md:py-4 md:px-10 rounded-full shadow-lg hover:scale-105 transition-transform duration-300">
+                        <i class="fa-solid fa-globe mr-2"></i> Visit Our Website
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="download-pdf-btn">
+        <i class="fa-solid fa-file-pdf mr-2"></i> Download PDF
+    </button>
+
+    <script>
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+        const loaderOverlay = document.getElementById('loader-overlay');
+
+        downloadPdfBtn.addEventListener('click', async () => {
+            loaderOverlay.style.display = 'flex';
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [1080, 1080]
+            });
+
+            const slides = document.querySelectorAll('.slide');
+            
+            for (let i = 0; i < slides.length; i++) {
+                const slide = slides[i];
+                
+                const canvas = await html2canvas(slide, {
+                    width: 1080,
+                    height: 1080,
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: null, 
+                    logging: false,
+                });
+                
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = canvas.width;
+                finalCanvas.height = canvas.height;
+                const ctx = finalCanvas.getContext('2d');
+                
+                const gradient = ctx.createLinearGradient(0, 0, finalCanvas.width, finalCanvas.height);
+                gradient.addColorStop(0, '#f5f7fa');
+                gradient.addColorStop(1, '#dbe7ff');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+                
+                ctx.drawImage(canvas, 0, 0);
+
+                const imgData = finalCanvas.toDataURL('image/jpeg', 0.9);
+
+                if (i > 0) {
+                    doc.addPage([1080, 1080], 'portrait');
+                }
+                
+                doc.addImage(imgData, 'JPEG', 0, 0, 1080, 1080);
+
+                const links = slide.querySelectorAll('a[href]');
+                if (links.length > 0) {
+                    const originalWidth = slide.offsetWidth;
+                     links.forEach(link => {
+                        const rect = link.getBoundingClientRect();
+                        const slideRect = slide.getBoundingClientRect();
+                        
+                        // Scale factor to convert screen pixels to PDF points
+                        const scaleX = 1080 / slide.offsetWidth;
+                        
+                        // We need the bounding box relative to the slide
+                        const x = rect.left - slideRect.left;
+                        const y = rect.top - slideRect.top;
+                        
+                        doc.link(x * scaleX, y * scaleX, rect.width * scaleX, rect.height * scaleX, { url: link.href });
+                    });
+                }
+            }
+            
+            // SLOT: PDF FILENAME
+            doc.save('Prepe-ABO-Rh-Grouping.pdf');
+            loaderOverlay.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
